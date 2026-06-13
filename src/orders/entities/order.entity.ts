@@ -46,7 +46,7 @@ export class Order {
   @Column({
     name: 'payment_method',
     type: 'enum',
-    enum: ['cod', 'banking'],
+    enum: ['cod', 'momo'],
     default: 'cod',
   })
   paymentMethod: string;

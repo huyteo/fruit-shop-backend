@@ -74,4 +74,22 @@ export class UsersService {
     user.isActive = !user.isActive;
     return this.usersRepository.save(user);
   }
+
+  async updateProfile(
+    id: number,
+    data: { name?: string; phone?: string; address?: string; avatar?: string },
+  ): Promise<User> {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    if (data.name) user.name = data.name;
+    if (data.phone !== undefined) user.phone = data.phone;
+    if (data.address !== undefined) user.address = data.address;
+    if (data.avatar !== undefined) user.avatar = data.avatar;
+
+    return this.usersRepository.save(user);
+  }
 }

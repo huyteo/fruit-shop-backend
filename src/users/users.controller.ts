@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Body,
   Param,
   ParseIntPipe,
   UseGuards,
@@ -31,7 +32,17 @@ export class UsersController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findById(id);
   }
-
+  @Put(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cập nhật thông tin người dùng' })
+  updateProfile(
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    data: { name?: string; phone?: string; address?: string; avatar?: string },
+  ) {
+    return this.usersService.updateProfile(id, data);
+  }
   @Put(':id/toggle-active')
   @ApiOperation({ summary: 'Khóa/Mở tài khoản người dùng (Admin)' })
   toggleActive(@Param('id', ParseIntPipe) id: number) {

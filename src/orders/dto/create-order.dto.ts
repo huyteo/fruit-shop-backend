@@ -34,8 +34,8 @@ export class CreateOrderDto {
   @IsNotEmpty({ message: 'Tên người nhận không được để trống' })
   receiverName: string;
 
-  @ApiProperty({ example: 'cod', enum: ['cod', 'banking'] })
-  @IsEnum(['cod', 'banking'], {
+  @ApiProperty({ example: 'cod', enum: ['cod', 'momo'] })
+  @IsEnum(['cod', 'momo'], {
     message: 'Phương thức thanh toán không hợp lệ',
   })
   paymentMethod: string;

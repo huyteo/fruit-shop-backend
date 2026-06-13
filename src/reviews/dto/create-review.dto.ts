@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { IsNumber, IsOptional, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateReviewDto {
@@ -17,6 +17,5 @@ export class CreateReviewDto {
     required: false,
   })
   @IsOptional()
-  @IsNotEmpty({ message: 'Nội dung đánh giá không được để trống' })
   comment?: string;
 }

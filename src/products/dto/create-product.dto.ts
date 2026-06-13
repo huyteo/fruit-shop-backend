@@ -48,4 +48,9 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
 }

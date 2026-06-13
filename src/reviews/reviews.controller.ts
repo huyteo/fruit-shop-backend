@@ -45,6 +45,18 @@ export class ReviewsController {
     return this.reviewsService.findAll();
   }
 
+  @Get('featured')
+  @ApiOperation({ summary: 'Lấy đánh giá nổi bật (Trang chủ - Public)' })
+  getFeatured() {
+    return this.reviewsService.getFeatured();
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Thống kê đánh giá (Trang chủ - Public)' })
+  getStats() {
+    return this.reviewsService.getStats();
+  }
+
   @Get('product/:productId')
   @ApiOperation({ summary: 'Lấy đánh giá theo sản phẩm' })
   findByProduct(@Param('productId', ParseIntPipe) productId: number) {

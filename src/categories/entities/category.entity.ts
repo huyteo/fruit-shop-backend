@@ -11,26 +11,26 @@ import { Product } from '../../products/entities/product.entity';
 @Entity('categories')
 export class Category {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({ length: 100 })
-  name: string;
+  name?: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description?: string;
 
   @Column({ length: 255, nullable: true })
-  image: string;
+  image?: string;
 
   @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  isActive?: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @OneToMany(() => Product, (product) => product.category)
-  products: Product[];
+  products?: Product[];
 }

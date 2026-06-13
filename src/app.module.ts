@@ -11,6 +11,8 @@ import { OrdersModule } from './orders/orders.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ChatModule } from './chat/chat.module';
 import { UploadModule } from './upload/upload.module';
+import { ImageRecognitionModule } from './image-recognition/image-recognition.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -29,7 +31,10 @@ import { UploadModule } from './upload/upload.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: false,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
     }),
 
@@ -48,6 +53,10 @@ import { UploadModule } from './upload/upload.module';
     ReviewsModule,
 
     ChatModule,
+
+    ImageRecognitionModule,
+
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
