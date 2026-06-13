@@ -1,79 +1,68 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { existsSync, mkdirSync, unlinkSync } from 'fs';
-import { join, extname } from 'path';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import * as streamifier from 'streamifier';
 
 @Injectable()
 export class UploadService {
-  private readonly uploadPath = join(process.cwd(), 'uploads');
-
   constructor() {
-    if (!existsSync(this.uploadPath)) {
-      mkdirSync(this.uploadPath, { recursive: true });
-    }
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
   }
 
-  handleUpload(file: Express.Multer.File): { url: string; filename: string } {
+  private uploadToCloudinary(
+    file: Express.Multer.File,
+  ): Promise<UploadApiResponse> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: 'halona' },
+        (error, result) => {
+          if (error) {
+            return reject(
+              new Error(error.message || 'Cloudinary upload error'),
+            );
+          }
+          if (!result) return reject(new Error('Upload thất bại'));
+          resolve(result);
+        },
+      );
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
+  }
+
+  async handleUpload(
+    file: Express.Multer.File,
+  ): Promise<{ url: string; filename: string }> {
     if (!file) {
       throw new BadRequestException('Không có file nào được upload');
     }
-
+    const result = await this.uploadToCloudinary(file);
     return {
-      url: `/uploads/${file.filename}`,
-      filename: file.filename,
+      url: result.secure_url, // URL Cloudinary đầy đủ (https://res.cloudinary.com/...)
+      filename: result.public_id,
     };
   }
 
-  handleMultipleUpload(
+  async handleMultipleUpload(
     files: Express.Multer.File[],
-  ): { url: string; filename: string }[] {
+  ): Promise<{ url: string; filename: string }[]> {
     if (!files || files.length === 0) {
       throw new BadRequestException('Không có file nào được upload');
     }
-
-    return files.map((file) => ({
-      url: `/uploads/${file.filename}`,
-      filename: file.filename,
+    const results = await Promise.all(
+      files.map((file) => this.uploadToCloudinary(file)),
+    );
+    return results.map((result) => ({
+      url: result.secure_url,
+      filename: result.public_id,
     }));
   }
 
-  deleteFile(filename: string): { message: string } {
-    const filePath = join(this.uploadPath, filename);
-
-    if (existsSync(filePath)) {
-      unlinkSync(filePath);
-      return { message: 'Xóa file thành công' };
-    }
-
-    throw new BadRequestException('File không tồn tại');
-  }
-
-  static imageFileFilter(
-    _req: unknown,
-    file: Express.Multer.File,
-    callback: (error: Error | null, acceptFile: boolean) => void,
-  ): void {
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const ext = extname(file.originalname).toLowerCase();
-
-    if (!allowedExtensions.includes(ext)) {
-      return callback(
-        new BadRequestException(
-          'Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)',
-        ),
-        false,
-      );
-    }
-
-    callback(null, true);
-  }
-
-  static generateFilename(
-    _req: unknown,
-    file: Express.Multer.File,
-    callback: (error: Error | null, filename: string) => void,
-  ): void {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = extname(file.originalname).toLowerCase();
-    callback(null, `${uniqueSuffix}${ext}`);
+  async deleteFile(filename: string): Promise<{ message: string }> {
+    // filename giờ là public_id của Cloudinary
+    await cloudinary.uploader.destroy(filename);
+    return { message: 'Xóa file thành công' };
   }
 }
