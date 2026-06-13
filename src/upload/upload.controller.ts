@@ -10,7 +10,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import {
   ApiTags,
   ApiOperation,
@@ -25,18 +25,7 @@ import { UploadService } from './upload.service';
 import { extname } from 'path';
 
 const multerOptions = {
-  storage: diskStorage({
-    destination: './uploads',
-    filename: (
-      _req: Express.Request,
-      file: Express.Multer.File,
-      callback: (error: Error | null, filename: string) => void,
-    ) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const ext = extname(file.originalname).toLowerCase();
-      callback(null, `${uniqueSuffix}${ext}`);
-    },
-  }),
+  storage: memoryStorage(),
   fileFilter: (
     _req: Express.Request,
     file: Express.Multer.File,
