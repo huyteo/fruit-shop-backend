@@ -10,12 +10,22 @@ interface AiResponse {
 
 @Injectable()
 export class ChatService {
-  private readonly AI_URL = 'http://localhost:8001/chat';
+  private readonly AI_URL = `${process.env.CHATBOT_URL || 'http://localhost:8001'}/chat`;
 
   constructor(
     @InjectRepository(ChatMessage)
     private chatRepository: Repository<ChatMessage>,
   ) {}
+
+  // Trả về URL ảnh đầy đủ: ảnh Cloudinary dùng thẳng, ảnh cũ /uploads/... thì ghép domain
+  private getFullImageUrl(imageUrl: string): string {
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    const backendUrl =
+      process.env.BACKEND_PUBLIC_URL || 'http://localhost:3000';
+    return `${backendUrl}${imageUrl}`;
+  }
 
   async sendMessage(userId: number, message: string, imageUrl?: string) {
     // Lấy lịch sử
@@ -33,7 +43,7 @@ export class ChatService {
         content: h.content as string,
       }));
 
-    // ✅ Lưu tin nhắn user với imageUrl
+    // Lưu tin nhắn user với imageUrl
     const userMessage = this.chatRepository.create({
       userId,
       role: 'user',
@@ -55,11 +65,9 @@ export class ChatService {
         history: formattedHistory,
       };
 
-      // Nếu có ảnh, thêm imageUrl vào request
+      // Nếu có ảnh, thêm imageUrl (đầy đủ) vào request
       if (imageUrl) {
-        // Convert relative URL to absolute URL
-        const fullImageUrl = `http://192.168.100.31:3000${imageUrl}`;
-        requestData.imageUrl = fullImageUrl;
+        requestData.imageUrl = this.getFullImageUrl(imageUrl);
       }
 
       const response = await axios.post<AiResponse>(this.AI_URL, requestData, {
@@ -89,22 +97,19 @@ export class ChatService {
     }
   }
 
-  // ✅ SỬA: Transform imageUrl sang format app cần
+  // Transform imageUrl sang format app cần
   async getChatHistory(userId: number) {
     const messages = await this.chatRepository.find({
       where: { userId },
       order: { createdAt: 'ASC' },
     });
 
-    // ✅ Transform imageUrl → image
     const transformed = messages.map((msg) => {
       const result = {
         id: msg.id,
         role: msg.role,
         content: msg.content,
-        image: msg.imageUrl
-          ? `http://192.168.100.31:3000${msg.imageUrl}`
-          : null,
+        image: msg.imageUrl ? this.getFullImageUrl(msg.imageUrl) : null,
         createdAt: msg.createdAt,
       };
       return result;
