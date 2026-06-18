@@ -33,7 +33,7 @@ export class ImageRecognitionService {
         formData,
         {
           headers: formData.getHeaders(),
-          timeout: 30000,
+          timeout: 60000,
         },
       );
 
