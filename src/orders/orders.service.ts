@@ -53,6 +53,9 @@ export class OrdersService {
       totalAmount += subtotal;
     }
 
+    const SHIPPING_FEE = 20000;
+    totalAmount += SHIPPING_FEE;
+
     const order = this.ordersRepository.create({
       userId: userId,
       shippingAddress: createOrderDto.shippingAddress,
