@@ -6,6 +6,7 @@ import {
   MomoIpnPayload,
   CreatePaymentDto,
 } from './payment.types';
+import { OrdersService } from '../orders/orders.service';
 
 @Injectable()
 export class PaymentService {
@@ -13,7 +14,7 @@ export class PaymentService {
   private readonly accessKey = process.env.MOMO_ACCESS_KEY!;
   private readonly secretKey = process.env.MOMO_SECRET_KEY!;
   private readonly endpoint = process.env.MOMO_ENDPOINT!;
-
+  constructor(private readonly ordersService: OrdersService) {}
   private sign(rawSignature: string): string {
     return crypto
       .createHmac('sha256', this.secretKey)
@@ -22,8 +23,10 @@ export class PaymentService {
   }
 
   async createMomoPayment(dto: CreatePaymentDto): Promise<MomoCreateResponse> {
-    const { orderId, amount, platform } = dto;
+    const { orderId, platform } = dto;
 
+    const order = await this.ordersService.findOne(orderId);
+    const amount = Number(order.totalAmount);
     const momoOrderId = `${orderId}-${Date.now()}`;
     const requestId = momoOrderId;
     const orderInfo = `Thanh toan don hang Halona Fruits #${orderId}`;
